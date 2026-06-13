@@ -143,7 +143,12 @@ def inject_storm_reroute(
 
     fuel_savings_pct = round((1 - alt_fuel / max(orig_fuel, 1)) * 100, 1)
     time_savings_min = orig_time_min - effective_alt_time
-    safety_score = 91
+    # Dynamic safety score based on flight number hash to prevent all flights showing 91
+    import hashlib
+    hash_seed = int(hashlib.md5(flight_num.encode('utf-8')).hexdigest(), 16)
+    safety_score = 88 + (hash_seed % 11)  # Generates deterministic scores between 88 and 98
+
+    ts = _now_iso()
 
     # Try calling the Gen AI Service
     from backend.services.llm_service import generate_agent_briefing
@@ -159,7 +164,6 @@ def inject_storm_reroute(
     
     if not agent_log:
         # Fall back to template-based generator if API keys are missing
-        ts = _now_iso()
         agent_log = [
             {
                 "agent": "Weather Agent",

@@ -58,18 +58,18 @@ def generate_agent_briefing(
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": 0.2
             }
-            response = requests.post(url, headers=headers, json=data, timeout=5)
+            response = requests.post(url, headers=headers, json=data, timeout=30)
             response.raise_for_status()
             content = response.json()["choices"][0]["message"]["content"]
         else:
             # Gemini Developer API
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
             headers = {"Content-Type": "application/json"}
             data = {
                 "contents": [{"parts": [{"text": prompt}]}],
                 "generationConfig": {"responseMimeType": "application/json"}
             }
-            response = requests.post(url, headers=headers, json=data, timeout=5)
+            response = requests.post(url, headers=headers, json=data, timeout=30)
             response.raise_for_status()
             content = response.json()["candidates"][0]["content"]["parts"][0]["text"]
 
