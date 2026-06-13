@@ -1,0 +1,66 @@
+:root {
+  color-scheme: dark;
+  font-family: "Segoe UI", "Inter", system-ui, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  --bg-0: #040814;
+  --bg-1: #08111f;
+  --bg-2: #0d1628;
+  --panel: rgba(9, 15, 28, 0.82);
+  --panel-strong: rgba(12, 21, 38, 0.94);
+  --line: rgba(148, 163, 184, 0.16);
+  --line-strong: rgba(96, 165, 250, 0.34);
+  --text: #bfd0e5;
+  --text-strong: #f5f9ff;
+  --muted: #7e92ad;
+  --muted-strong: #abc0d8;
+  --blue: #56c7ff;
+  --cyan: #4ff1dd;
+  --amber: #ffbf5b;
+  --green: #63e6a1;
+  --red: #fb7185;
+  --shadow: 0 24px 60px rgba(0, 0, 0, 0.36);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 15% 12%, rgba(86, 199, 255, 0.18), transparent 32%),
+    radial-gradient(circle at 82% 18%, rgba(79, 241, 221, 0.14), transparent 26%),
+    radial-gradient(circle at 50% 100%, rgba(27, 57, 97, 0.28), transparent 42%),
+    linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 46%, var(--bg-2) 100%);
+  color: var(--text);
+}
+
+body,
+button,
+input,
+textarea,
+select {
+  font: 500 14px/1.5 "Segoe UI", "Inter", system-ui, sans-serif;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: rgba(86, 199, 255, 0.28);
+  color: var(--text-strong);
+}
+
+#root {
+  min-height: 100svh;
+}
