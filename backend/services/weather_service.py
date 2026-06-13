@@ -112,7 +112,7 @@ def fetch_weather_for_flights(flights: list[dict[str, Any]]) -> tuple[list[dict[
     observations: list[dict[str, Any]] = []
     last_meta = _meta("empty", "No flights with coordinates were available for weather lookup")
 
-    for flight in flights:
+    for flight in flights[:5]:  # Limit to 5 flights to prevent slow sequential API calls
         latitude = flight.get("latitude")
         longitude = flight.get("longitude")
 

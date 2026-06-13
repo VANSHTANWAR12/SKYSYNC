@@ -197,7 +197,14 @@ function Dashboard() {
     };
   }, []);
 
-  const selectedFlight = flights[0] || null;
+  const [selectedFlightId, setSelectedFlightId] = useState(null);
+  const selectedFlight = useMemo(() => {
+    if (selectedFlightId) {
+      return flights.find((f) => f.id === selectedFlightId) || flights[0] || null;
+    }
+    return flights[0] || null;
+  }, [flights, selectedFlightId]);
+
   const agents = useMemo(
     () => ({
       weatherAgent: agentData.weatherAgent,
@@ -227,6 +234,9 @@ function Dashboard() {
       <main className="dashboard-layout">
         <FlightInfo
           flight={selectedFlight}
+          flights={flights}
+          selectedFlightId={selectedFlightId}
+          onSelectFlight={setSelectedFlightId}
           loading={flightLoading}
           error={flightError}
           flightCount={flights.length}
