@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 
 # Allow the model string to be overridden via env for testing/stability
 # Default preserves the existing value but can be set to 'gemini-1.5-pro' etc.
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
 
 def _strip_code_blocks(text: str) -> str:
