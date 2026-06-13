@@ -1,6 +1,8 @@
-# ✈️ SkySync — Intelligent Flight Dispatch & Airspace Rerouting Monitor
+# ✈️ SkySync — Intelligent Airspace Intelligence Platform
 
-SkySync is a next-generation, agent-driven flight monitoring and dynamic rerouting platform. By orchestrating a multi-agent system (Weather, Traffic, Navigation, and GenAI Dispatch Agents), SkySync simulates real-time radar networks, monitors airspace hazards, and generates live weather-avoidance detours. It features a responsive, glassmorphic dashboard interface integrated with an interactive map, and utilizes the Google Gemini API to deliver direct cockpit briefings and ATC scripts.
+SkySync is a next-generation, agent-driven flight monitoring and dynamic rerouting platform for Indian airspace. It orchestrates a **multi-agent AI system** (Weather, Traffic, Navigation, and GenAI Dispatch Agents), monitors live airspace hazards, generates real-time weather-avoidance detours, and features an **AI Copilot chatbot powered by Google Gemini** that can answer anything about flights, weather, fuel, and aviation procedures.
+
+> 🚀 **Live repo:** [github.com/Unknown-infinity/SKYSYNC](https://github.com/Unknown-infinity/SKYSYNC)
 
 ---
 
@@ -10,7 +12,7 @@ SkySync is a next-generation, agent-driven flight monitoring and dynamic rerouti
 | :---: | :---: |
 | ![Initial Dashboard](./docs/assets/dashboard_initial.png) | ![Flight Selected](./docs/assets/flight_selected.png) |
 
-| 3. Injected Storm Avoidance Reroute & AI Copilot Briefing |
+| 3. Inject Storm — Avoidance Reroute & AI Copilot Briefing |
 | :---: |
 | ![Storm Avoidance Reroute](./docs/assets/storm_injected.png) |
 
@@ -18,78 +20,84 @@ SkySync is a next-generation, agent-driven flight monitoring and dynamic rerouti
 
 ## 🚀 Key Features
 
-* **Interactive Live Airspace Map:**
-  * Rendered via Leaflet.js with high-performance SVG plane markers.
-  * Flight icons are dynamically rotated matching their heading coordinates.
-  * Displays faint historical tracks and active routes.
-  * Interactive tooltips show flight metrics (altitude, speed, airline, callsign).
-* **Multi-Agent Coordination Engine:**
-  * **Weather Agent:** Scans localized grid coordinates for meteorological hazards (wind speed, precipitation, convective indices) and computes risk alerts.
-  * **Traffic Agent:** Aggregates radar returns in real-time, calculating spatial flight density around major airspace hubs (Delhi, Mumbai, Nagpur) to flag congestion.
-  * **Navigation Agent:** Synthesizes inputs from weather and traffic to make decisions like hold pattern entries (`HOLD`), close observation warnings (`ADVISORY`), or rerouting triggers (`REROUTE_REQUIRED`).
-* **Dynamic Weather Injection & Detours:**
-  * Simulates severe convective storms anywhere on a flight's trajectory.
-  * Automatically calculates lateral detours (bell-curve offset math) and cruise altitude modifications.
-  * Estimates fuel efficiency deltas and flight time modifications (including saved hold times).
-* **GenAI Copilot & Dispatch Scripting:**
-  * Integrates with the **Google Gemini 1.5 Flash API** to generate natural language flight briefs for the captain.
-  * Outputs exact radio transmission script formatting for standard ATC phraseology (avoiding manual drafting during high-stress flight situations).
-* **High-Performance Saturation Mode:**
-  * Cross-references live OpenSky API flight telemetry inside Indian Airspace.
-  * Fills sparse airspace networks automatically with up to 350 simulated flight agents traversing real hub-to-hub corridors, creating a full saturation load.
+### 🗺️ Interactive Live Airspace Map
+- Rendered via **Leaflet.js** with high-performance SVG plane markers
+- Flight icons dynamically rotated to match real heading coordinates
+- Displays active flight routes with animated polylines
+- Interactive tooltips show altitude, speed, airline, and callsign
+- **Draw Storm** mode: click anywhere on the map to place a custom storm cell
+- **Fullscreen** mode for immersive airspace monitoring
+
+### 🤖 Multi-Agent Coordination Engine
+| Agent | Role |
+|---|---|
+| **Weather Agent** | Scans localized grid coordinates via Open-Meteo API for wind, precipitation, and convective hazards |
+| **Traffic Agent** | Aggregates flight density around major Indian hubs (Delhi, Mumbai, Nagpur) and flags congestion |
+| **Navigation Agent** | Synthesizes weather + traffic inputs to decide HOLD, ADVISORY, or REROUTE_REQUIRED actions |
+
+### ⛈️ Inject Storm — Dynamic Weather Avoidance
+- Simulate a **severe convective storm** anywhere along a flight's trajectory
+- Automatically computes a **lateral bell-curve detour route** that bypasses the storm
+- Storm holding/manoeuvre penalties **scale with wind speed** (15–35 min, 400–900 kg fuel)
+- Shows a full **Agent Reasoning Log** with step-by-step decision trail
+- Includes **AI Copilot briefing** and formatted **ATC radio script** via Gemini
+
+### 🧠 AI Copilot Chatbot (Gemini-powered)
+- Ask **anything** about flights, weather, rerouting, fuel, or aviation procedures in plain English
+- Receives **live airspace context** (current flights + weather threats) with every message
+- Powered by **Gemini 1.5 Flash** — falls back to rule-based answers if no API key is set
+- Shows typing indicator while Gemini thinks; streams reply word-by-word
+- Supports slash commands: `/reroute`, `/storm`, `/clear`
+
+### ⚡ Swarm Mode — Fleet-Wide Storm Avoidance
+- Select multiple flights and inject a storm across the **entire fleet simultaneously**
+- Parallel rerouting calculations for all selected aircraft
+- **Fleet Impact Summary** panel: total fuel Δ, total time Δ, average safety score
+- Per-flight drill-down with Focus Mode to isolate a corridor on the map
+- Approve or reject individual routes or all at once
+
+### 📡 High-Performance Flight Data
+- Live flight telemetry from the **OpenSky Network API** for Indian airspace
+- Auto-fills sparse data with up to **350 simulated flight agents** on real hub-to-hub corridors
+- Weather data from **Open-Meteo API** (free, no key required) — capped at 20 grid cells for fast response
 
 ---
 
 ## 🏗️ System Architecture
 
-SkySync divides responsibilities between a React client, a FastAPI server, and upstream weather, satellite, and LLM APIs:
-
 ```mermaid
 graph TD
-    subgraph Frontend [React Vite Client]
+    subgraph Frontend ["React + Vite Client"]
         Dashboard[Dashboard UI]
-        FlightMap[Flight Map Component]
-        AgentPanel[Agent Status Panel]
-        FlightInfo[Flight Info Panel]
+        FlightMap[Flight Map — Leaflet]
+        AgentConsole[AI Copilot Console]
+        SwarmPanel[Swarm Impact Panel]
     end
 
-    subgraph Backend [FastAPI Server]
+    subgraph Backend ["FastAPI Server :8000"]
         API[FastAPI Router]
         FlightSvc[Flight Service]
-        OpenSky[OpenSky Client]
         WeatherSvc[Weather Service]
-        AgentMgr[Multi-Agent Coordination Engine]
-        RerouteEngine[Reroute Engine]
+        AgentMgr[Multi-Agent Engine]
+        RerouteEngine[Reroute / Inject Storm]
+        ChatEndpoint[AI Chat Endpoint]
     end
 
-    subgraph Upstream [External Integrations]
-        OSN[OpenSky API]
-        OM[Open-Meteo API]
-        Gemini[Gemini AI API]
+    subgraph Upstream ["External APIs"]
+        OSN[OpenSky Network]
+        OM[Open-Meteo]
+        Gemini[Google Gemini 1.5 Flash]
     end
 
-    %% Frontend interactions
-    Dashboard <-->|fetch flights, weather, agents, reroutes| API
-    FlightMap <-->|render coordinates & tracks| Dashboard
-    AgentPanel <-->|display logs & risk scores| Dashboard
-    FlightInfo <-->|list details & schedules| Dashboard
+    Dashboard <-->|flights, weather, agents| API
+    AgentConsole <-->|POST /api/chat| ChatEndpoint
+    SwarmPanel <-->|POST /api/reroute| RerouteEngine
 
-    %% Backend interactions
-    API --> FlightSvc
-    API --> WeatherSvc
+    API --> FlightSvc --> OSN
+    API --> WeatherSvc --> OM
     API --> AgentMgr
-    API --> RerouteEngine
-
-    FlightSvc --> OpenSky
-    OpenSky -->|Fetch states/flights| OSN
-    WeatherSvc -->|Fetch forecast| OM
-    
-    AgentMgr -->|Evaluate risks| WeatherAgent[Weather Agent]
-    AgentMgr -->|Evaluate sectors| TrafficAgent[Traffic Agent]
-    AgentMgr -->|Synthesize status| NavAgent[Navigation Agent]
-
-    RerouteEngine -->|Generate prompt| Gemini
-    Gemini -->|Briefing & ATC script| RerouteEngine
+    API --> RerouteEngine --> Gemini
+    ChatEndpoint --> Gemini
 ```
 
 ---
@@ -97,107 +105,130 @@ graph TD
 ## 📂 Project Structure
 
 ```
-skysync-main/
+SKYSYNC/
 ├── backend/
-│   ├── agents/                   # Symbolic Multi-Agent definitions
-│   │   ├── __init__.py
+│   ├── agents/                     # Symbolic Multi-Agent definitions
 │   │   ├── navigation_agent.py
 │   │   ├── traffic_agent.py
 │   │   └── weather_agent.py
-│   ├── routes/                   # FastAPI route endpoints
-│   │   ├── agents.py
-│   │   ├── flights.py
-│   │   ├── health.py
-│   │   ├── reroute.py            # Storm injection, rerouting, & GenAI briefings
-│   │   └── weather.py
-│   ├── services/                 # Internal business logic and API integrations
-│   │   ├── flight_service.py     # Saturation logic and cache
-│   │   ├── opensky_service.py    # OpenSky Network tracker client
-│   │   └── weather_service.py    # Weather forecasts & summarized threat zones
-│   ├── .env.example
-│   ├── main.py                   # App startup and CORS middleware
-│   └── req.txt                   # Backend requirements
+│   ├── routes/                     # FastAPI route endpoints
+│   │   ├── agents.py               # GET /api/agents
+│   │   ├── chat.py                 # POST /api/chat  ← AI Copilot (Gemini)
+│   │   ├── flights.py              # GET /api/flights
+│   │   ├── health.py               # GET /api/health
+│   │   ├── reroute.py              # POST /api/reroute (Inject Storm)
+│   │   └── weather.py              # GET /api/weather
+│   ├── services/
+│   │   ├── flight_service.py       # OpenSky + saturation logic
+│   │   ├── opensky_service.py      # OpenSky Network client
+│   │   └── weather_service.py      # Open-Meteo weather threats
+│   ├── .env.example                # Environment variable template
+│   ├── main.py                     # App startup + CORS middleware
+│   └── req.txt                     # Python dependencies
 ├── frontend/
-│   ├── src/
-│   │   ├── assets/
-│   │   ├── components/
-│   │   │   ├── AgentPanel.jsx    # Real-time multi-agent activity log feed
-│   │   │   ├── EventFeed.jsx     # Alert logs (INFO, WARNING, CRITICAL)
-│   │   │   ├── FlightInfo.jsx    # Sidebar showing flight telemetry list
-│   │   │   ├── FlightMap.jsx     # Fullscreen-capable Leaflet Map
-│   │   │   ├── Header.jsx        # Top status bar with UTC clock
-│   │   │   └── RerouteCard.jsx   # Interactive modal displaying detour metrics
-│   │   ├── hooks/
-│   │   │   └── useReroute.js
-│   │   ├── pages/
-│   │   │   └── dashboard.jsx     # Main layout container with resizable grid splitters
-│   │   ├── services/
-│   │   ├── utils/
-│   │   ├── App.css
-│   │   ├── index.css
-│   │   └── main.jsx
-│   ├── .env.example
-│   ├── index.html
-│   └── package.json              # Client dependencies and build setup
-├── docs/
-│   └── assets/                   # Screenshots and graphics
-├── package.json                  # Root development script configurations
-└── README.md                     # Documentation
+│   └── src/
+│       ├── components/
+│       │   ├── AgentConsole.jsx    # AI Copilot chatbot + slash commands
+│       │   ├── AgentPanel.jsx      # Agent status monitoring panel
+│       │   ├── FlightMap.jsx       # Leaflet map with storm drawing
+│       │   ├── RerouteCard.jsx     # Single-flight reroute result card
+│       │   └── SwarmImpactPanel.jsx# Fleet-wide swarm reroute summary
+│       ├── hooks/
+│       │   └── useReroute.js       # Inject storm lifecycle hook
+│       ├── pages/
+│       │   └── dashboard.jsx       # Main layout + all panel wiring
+│       ├── services/               # API client functions
+│       ├── types/reroute.js        # JSDoc type definitions
+│       └── utils/
+│           ├── airportCoords.js    # Airport lat/lng lookup table
+│           └── swarmFlights.js     # Swarm flight generation
+├── docs/assets/                    # Screenshots
+├── package.json                    # Root dev scripts (concurrently)
+└── README.md
 ```
 
 ---
 
-## 🛠️ Configuration & Installation
+## 🛠️ Installation & Setup
 
 ### Prerequisites
+- **Node.js** v18+
+- **Python** 3.9+
 
-* Node.js (v18+)
-* Python (3.9+)
-
-### 1. Clone & Install Dependencies
-Run the install command from the root folder to set up packages for both the backend and frontend simultaneously:
-
+### 1. Clone the repository
 ```bash
-npm run install:all
+git clone https://github.com/Unknown-infinity/SKYSYNC.git
+cd SKYSYNC
 ```
 
-To install the backend python dependencies:
+### 2. Install all dependencies
 ```bash
+# Install frontend + root packages
+npm install
+
+# Install backend Python packages
 pip install -r backend/req.txt
 ```
 
-### 2. Set Up Environment Variables
+### 3. Set up environment variables
 
-Create `.env` files based on the examples provided:
+Copy the example file and fill in your values:
+```bash
+cp backend/.env.example backend/.env
+```
 
-#### **Backend (`backend/.env`)**
+**`backend/.env`**
 ```ini
 OPEN_METEO_URL=https://api.open-meteo.com/v1/forecast
-OPEN_METEO_TIMEOUT=20
+OPEN_METEO_TIMEOUT=5
 GEMINI_API_KEY=your_gemini_api_key_here
 ```
-> [!TIP]
-> Setting `GEMINI_API_KEY` is optional but highly recommended. If left blank, SkySync will automatically fall back to its rule-based Symbolic AI text generator for the copilot briefing and ATC script.
 
-#### **Frontend (`frontend/.env`)**
-```ini
-VITE_MAPBOX_TOKEN=your_mapbox_token_here
-VITE_API_BASE_URL=http://localhost:8000
-```
+> [!TIP]
+> Get a free Gemini API key at [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey).
+> `GEMINI_API_KEY` is optional — SkySync falls back to rule-based responses if not set.
+> Open-Meteo requires **no API key**.
 
 ---
 
-## ⚡ Launching the Application
+## ⚡ Running the App
 
-Start the FastAPI backend and Vite frontend together in a single terminal terminal session:
+Start both backend and frontend together with a single command:
 
 ```bash
 npm run dev
 ```
 
-* **Vite Web Dashboard:** [http://localhost:5173](http://localhost:5173)
-* **FastAPI Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
-* **FastAPI Health Check:** [http://localhost:8000/api/health](http://localhost:8000/api/health)
+| Service | URL |
+|---|---|
+| 🌐 Vite Dashboard | [http://localhost:5173](http://localhost:5173) |
+| ⚙️ FastAPI Docs (Swagger) | [http://localhost:8000/docs](http://localhost:8000/docs) |
+| 💚 Health Check | [http://localhost:8000/api/health](http://localhost:8000/api/health) |
+
+---
+
+## 🔌 API Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/health` | Server health check |
+| `GET` | `/api/flights` | Live + simulated flights in Indian airspace |
+| `GET` | `/api/weather` | Weather threats from Open-Meteo |
+| `GET` | `/api/agents` | Weather, Traffic & Navigation agent status |
+| `POST` | `/api/reroute` | Inject storm & compute alternate route |
+| `POST` | `/api/chat` | AI Copilot — Gemini-powered free-text Q&A |
+
+---
+
+## 💬 Chatbot Commands
+
+| Command | Action |
+|---|---|
+| `/reroute [flight]` | Reroute a specific flight (e.g. `/reroute AI-3088`) |
+| `/storm [lat] [lng]` | Place a storm cell at coordinates (e.g. `/storm 21.5 76.8`) |
+| `/storm clear` | Remove the custom storm cell |
+| `/clear` | Clear the chat log |
+| Free text | Ask the AI Copilot anything about flights or aviation |
 
 ---
 
