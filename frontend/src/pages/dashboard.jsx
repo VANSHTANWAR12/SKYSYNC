@@ -60,7 +60,7 @@ function buildEvents(flightCount, weatherSummary, agentData, apiStatus) {
   return events;
 }
 
-function Dashboard() {
+function Dashboard({ user, onLogout }) {
   const [utcTime, setUtcTime] = useState(() => formatUtcTime(new Date()));
   const [flights, setFlights] = useState([]);
   const [flightError, setFlightError] = useState("");
@@ -229,7 +229,12 @@ function Dashboard() {
 
   return (
     <div className="dashboard-shell">
-      <Header utcTime={utcTime} systemStatus={flightError || weatherError || agentError ? "Degraded" : "Operational"} />
+      <Header
+        utcTime={utcTime}
+        systemStatus={flightError || weatherError || agentError ? "Degraded" : "Operational"}
+        user={user}
+        onLogout={onLogout}
+      />
 
       <main className="dashboard-layout">
         <FlightInfo

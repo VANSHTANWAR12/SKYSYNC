@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.routes.agents import router as agents_router
+from backend.routes.auth import router as auth_router
 from backend.routes.flights import router as flights_router
 from backend.routes.health import router as health_router
 from backend.routes.weather import router as weather_router
@@ -23,4 +24,5 @@ app.add_middleware(
 app.include_router(flights_router, prefix="/api")
 app.include_router(weather_router, prefix="/api")
 app.include_router(agents_router, prefix="/api")
+app.include_router(auth_router, prefix="/api")
 app.include_router(health_router, prefix="/api")
