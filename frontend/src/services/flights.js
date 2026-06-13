@@ -34,6 +34,7 @@ function normalizeFlight(item, index) {
     speed: item.speed ?? item.groundSpeed ?? item.velocity ?? "N/A",
     fuelRemaining:
       item.fuelRemaining || item.fuel_remaining || item.fuel || item.fuelPercent || "N/A",
+    heading: Number(item.heading ?? item.track ?? item.trueTrack ?? 0),
   };
 }
 

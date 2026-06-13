@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from backend.services.aviationstack_service import fetch_active_flights
+from backend.services.flight_service import get_all_flights
 from backend.services.weather_service import build_weather_summary, fetch_weather_for_flights
 
 router = APIRouter()
@@ -8,7 +8,7 @@ router = APIRouter()
 
 @router.get("/weather")
 def weather():
-    flights, flight_meta = fetch_active_flights()
+    flights, flight_meta = get_all_flights()
     observations, weather_meta = fetch_weather_for_flights(flights)
     threats = [observation for observation in observations if observation["riskLevel"] != "LOW"]
 

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 import Dashboard from "./pages/dashboard.jsx";
 import LoginPage from "./components/LoginPage.jsx";

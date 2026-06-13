@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { loginUser, registerUser } from "../services/auth";
 
 function LoginPage({ onLogin }) {
@@ -34,7 +34,10 @@ function LoginPage({ onLogin }) {
     <main className="login-page">
       <section className="login-card">
         <div className="login-card__hero">
-          <div className="login-badge">SkySync</div>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <div className="login-badge">SY</div>
+            <span style={{ fontSize: "24px", fontWeight: "800", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--text-strong)" }}>SkySync</span>
+          </div>
           <div>
             <h1 className="login-card__title">Secure flight operations access</h1>
             <p className="login-card__subtitle">

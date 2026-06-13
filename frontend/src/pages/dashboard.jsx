@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import Header from "../components/Header";
 import FlightInfo from "../components/FlightInfo";
 import FlightMap from "../components/FlightMap";
@@ -7,6 +7,8 @@ import EventFeed from "../components/EventFeed";
 import { fetchLiveFlights } from "../services/flights";
 import { fetchWeatherThreats } from "../services/weather";
 import { fetchAgentStatus } from "../services/agents";
+import { useReroute } from "../hooks/useReroute";
+import { resolveAirportCoords } from "../utils/airportCoords";
 
 function formatUtcTime(date) {
   return new Intl.DateTimeFormat("en-GB", {
@@ -63,15 +65,42 @@ function buildEvents(flightCount, weatherSummary, agentData, apiStatus) {
 function Dashboard({ user, onLogout }) {
   const [utcTime, setUtcTime] = useState(() => formatUtcTime(new Date()));
   const [flights, setFlights] = useState([]);
+  const [selectedFlightId, setSelectedFlightId] = useState(null);
   const [flightError, setFlightError] = useState("");
   const [flightLoading, setFlightLoading] = useState(true);
+  const [leftWidth, setLeftWidth] = useState(280);
+  const [rightWidth, setRightWidth] = useState(300);
+  const [isResizingLeft, setIsResizingLeft] = useState(false);
+  const [isResizingRight, setIsResizingRight] = useState(false);
   const [weatherSummary, setWeatherSummary] = useState({ maxRisk: 0, totalThreats: 0, highThreats: 0, criticalThreats: 0 });
   const [weatherThreats, setWeatherThreats] = useState([]);
   const [weatherError, setWeatherError] = useState("");
   const [weatherLoading, setWeatherLoading] = useState(true);
-  const [agentData, setAgentData] = useState({ weatherAgent: null, trafficAgent: null, trafficZones: [] });
+  const [agentData, setAgentData] = useState({ weatherAgent: null, trafficAgent: null, navigationAgent: null, trafficZones: [] });
   const [agentError, setAgentError] = useState("");
   const [agentLoading, setAgentLoading] = useState(true);
+
+  // ── Reroute hook ──────────────────────────────────────────────────────────
+  const {
+    rerouteData,
+    rerouteStatus,
+    agentLog,
+    showOriginal,
+    setShowOriginal,
+    injectStorm,
+    approveReroute,
+    rejectReroute,
+  } = useReroute();
+
+  /**
+   * Build a flight context object for the reroute hook —
+   * resolving display names to lat/lng coords.
+   */
+  const handleInjectStorm = () => {
+    const flight = flights.find(f => f.id === selectedFlightId);
+    if (!flight) return;
+    injectStorm(flight);
+  };
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -179,7 +208,7 @@ function Dashboard({ user, onLogout }) {
         }
         console.error("Failed to load agent data:", error);
         setAgentError(error instanceof Error ? error.message : "Failed to load agent data");
-        setAgentData({ weatherAgent: null, trafficAgent: null, trafficZones: [] });
+        setAgentData({ weatherAgent: null, trafficAgent: null, navigationAgent: null, trafficZones: [] });
       } finally {
         if (mounted) {
           setAgentLoading(false);
@@ -197,18 +226,47 @@ function Dashboard({ user, onLogout }) {
     };
   }, []);
 
-  const [selectedFlightId, setSelectedFlightId] = useState(null);
-  const selectedFlight = useMemo(() => {
-    if (selectedFlightId) {
-      return flights.find((f) => f.id === selectedFlightId) || flights[0] || null;
+  const selectedFlight = useMemo(
+    () => flights.find(f => f.id === selectedFlightId) || null,
+    [flights, selectedFlightId]
+  );
+
+  const handleSelectFlight = useCallback((id) => {
+    setSelectedFlightId(prevId => prevId === id ? null : id);
+  }, []);
+  const handleMouseDownLeft = () => setIsResizingLeft(true);
+  const handleMouseDownRight = () => setIsResizingRight(true);
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (isResizingLeft) {
+        setLeftWidth(Math.max(280, Math.min(600, e.clientX - 20)));
+      }
+      if (isResizingRight) {
+        setRightWidth(Math.max(280, Math.min(600, window.innerWidth - e.clientX - 20)));
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizingLeft(false);
+      setIsResizingRight(false);
+    };
+
+    if (isResizingLeft || isResizingRight) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
     }
-    return flights[0] || null;
-  }, [flights, selectedFlightId]);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isResizingLeft, isResizingRight]);
 
   const agents = useMemo(
     () => ({
       weatherAgent: agentData.weatherAgent,
       trafficAgent: agentData.trafficAgent,
+      navigationAgent: agentData.navigationAgent,
       weatherLoading,
       flightLoading,
       agentLoading,
@@ -236,23 +294,46 @@ function Dashboard({ user, onLogout }) {
         onLogout={onLogout}
       />
 
-      <main className="dashboard-layout">
+      <main 
+        className="dashboard-layout" 
+        style={{ 
+            gridTemplateColumns: `${leftWidth}px 8px 1fr 8px ${rightWidth}px`,
+            userSelect: (isResizingLeft || isResizingRight) ? 'none' : 'auto'
+        }}
+      >
         <FlightInfo
           flight={selectedFlight}
-          flights={flights}
-          selectedFlightId={selectedFlightId}
-          onSelectFlight={setSelectedFlightId}
           loading={flightLoading}
           error={flightError}
-          flightCount={flights.length}
+          flights={flights}
+          onSelectFlight={handleSelectFlight}
+          weatherThreats={agentData.weatherThreats || []}
+          navigationDecisions={agentData.navigationDecisions || []}
         />
+        
+        <div className={`resizer ${isResizingLeft ? 'resizer--active' : ''}`} onMouseDown={handleMouseDownLeft} />
+
         <FlightMap
           flights={flights}
+          selectedFlightId={selectedFlightId}
+          selectedFlight={selectedFlight}
+          onSelectFlight={handleSelectFlight}
           weatherThreats={weatherThreats}
           trafficZones={agentData.trafficZones || []}
           weatherLoading={weatherLoading}
           weatherError={weatherError}
+          rerouteData={rerouteData}
+          rerouteStatus={rerouteStatus}
+          agentLog={agentLog}
+          showOriginal={showOriginal}
+          onToggleOriginal={setShowOriginal}
+          onInjectStorm={handleInjectStorm}
+          onApproveReroute={approveReroute}
+          onRejectReroute={rejectReroute}
         />
+
+        <div className={`resizer ${isResizingRight ? 'resizer--active' : ''}`} onMouseDown={handleMouseDownRight} />
+
         <AgentPanel agentData={agents} />
       </main>
 

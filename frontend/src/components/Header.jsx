@@ -17,16 +17,12 @@ function Header({ utcTime, systemStatus, user, onLogout }) {
           {systemStatus}
         </div>
         <div className="time-pill">UTC {utcTime}</div>
-        <div className="user-meta">
-          {user ? (
-            <>
-              <span>Signed in as {user.email}</span>
-              <button type="button" className="logout-button" onClick={onLogout}>
-                Logout
-              </button>
-            </>
-          ) : null}
-        </div>
+        {user && (
+          <div className="user-profile-pill">
+            <span className="user-email">{user.email || user.username}</span>
+            <button className="logout-button" onClick={onLogout}>Logout</button>
+          </div>
+        )}
         <h1 className="dashboard-title">Airline Operations Dashboard</h1>
       </div>
     </header>
