@@ -49,7 +49,9 @@ export function useReroute() {
     setShowOriginal(true);
 
     // Resolve real lat/lng for origin + destination from airport display names
-    const originCoords      = resolveAirportCoords(flight.origin)      || [26.1445, 91.7362];
+    const originCoords      = (flight.latitude != null && flight.longitude != null)
+      ? [flight.latitude, flight.longitude]
+      : (resolveAirportCoords(flight.origin) || [26.1445, 91.7362]);
     const destinationCoords = resolveAirportCoords(flight.destination)  || [13.0827, 80.2707];
 
     try {
