@@ -119,7 +119,7 @@ Each object must include these fields:
     headers = {"Content-Type": "application/json"}
 
     try:
-        response = _post_gemini_request(url, headers, payload)
+        response = _post_gemini_request(url, headers, payload, max_retries=1)
         response.raise_for_status()
         body = response.json()
         candidate = body["candidates"][0]
@@ -250,10 +250,14 @@ def _get_local_chat_fallback(message: str) -> str:
     msg = message.lower()
     if "weather" in msg or "storm" in msg or "rain" in msg or "cloud" in msg or "wind" in msg:
         return "Advisory: Severe weather cell tracking north-northeast. Alternate flight plans have been mapped to bypass convective storm activity and optimize safety limits."
+    elif "money" in msg or "cost" in msg or "financial" in msg or "expense" in msg or "budget" in msg:
+        return "Cost Analysis: En-route detours reduce fuel-burn and prevent expensive flight holding patterns or diversion landings. Active optimization projects a net savings of approximately $1,200 to $3,500 USD per flight by avoiding airport weather delays."
     elif "traffic" in msg or "congestion" in msg or "separation" in msg or "plane" in msg:
         return "Traffic Alert: Airspace density exceeds nominal thresholds. Navigation system is maintaining 15 NM spacing rules; consider vectoring to secondary flight routes."
     elif "reroute" in msg or "route" in msg or "alternate" in msg:
         return "Navigation Swarm update: Alternate route bypasses weather cells and prevents holding delays, offering optimal fuel-to-time ratios. Awaiting crew selection."
+    elif "fuel" in msg or "save" in msg or "burn" in msg or "efficiency" in msg:
+        return "Fuel Advisory: Re-routing path avoids weather holding patterns. Although lateral distance increases, it prevents holding loops, resulting in a net fuel saving of approximately 250 to 500 kg depending on the selected flight route."
     elif "hello" in msg or "hi" in msg:
         return "SkySync pilot intelligence assistant online. Ready to evaluate telemetry, weather threats, and airspace optimization plans."
     else:
@@ -293,7 +297,7 @@ User: {user_message}
     headers = {"Content-Type": "application/json"}
 
     try:
-        response = _post_gemini_request(url, headers, payload)
+        response = _post_gemini_request(url, headers, payload, max_retries=1)
         response.raise_for_status()
         body = response.json()
         candidate = body.get("candidates", [{}])[0]

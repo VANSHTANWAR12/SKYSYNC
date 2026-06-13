@@ -12,7 +12,10 @@ _cache = {
 }
 CACHE_TTL = 30 
 
+_stable_swarm = []
+
 def _generate_mega_swarm(count: int = 350) -> list[dict[str, Any]]:
+    global _stable_swarm
     airlines = ["Air India", "IndiGo", "Vistara", "SpiceJet", "Akasa Air", "AirAsia India", "Alliance Air"]
     hubs = [
         ("DELHI (DEL)", 28.6, 77.2), ("MUMBAI (BOM)", 19.1, 72.8), 
@@ -25,43 +28,51 @@ def _generate_mega_swarm(count: int = 350) -> list[dict[str, Any]]:
         ("PATNA (PAT)", 25.5, 85.0), ("INDORE (IDR)", 22.7, 75.8)
     ]
     
-    swarm = []
-    import math
-    for i in range(count):
-        origin = random.choice(hubs)
-        dest = random.choice(hubs)
-        while dest == origin: dest = random.choice(hubs)
-        
-        # Interpolate a position along the path from origin to destination (e.g., 10% to 90% along the path)
-        t = random.uniform(0.1, 0.9)
-        lat = origin[1] + t * (dest[1] - origin[1]) + random.uniform(-0.2, 0.2)
-        lon = origin[2] + t * (dest[2] - origin[2]) + random.uniform(-0.2, 0.2)
-        
-        # Calculate heading
-        d_lon = math.radians(dest[2] - origin[2])
-        lat1_rad = math.radians(origin[1])
-        lat2_rad = math.radians(dest[1])
-        y = math.sin(d_lon) * math.cos(lat2_rad)
-        x = math.cos(lat1_rad) * math.sin(lat2_rad) - math.sin(lat1_rad) * math.cos(lat2_rad) * math.cos(d_lon)
-        brng = math.atan2(y, x)
-        heading = int((math.degrees(brng) + 360) % 360)
-        
-        swarm.append({
-            "id": f"MEGA-SATURATION-{i}",
-            "flightNumber": f"{random.choice(['AI','6E','UK','SG', 'QP', 'I5'])}-{random.randint(100, 9999)}",
-            "airline": random.choice(airlines),
-            "origin": origin[0],
-            "destination": dest[0],
-            "status": "active",
-            "latitude": lat,
-            "longitude": lon,
-            "altitude": random.randint(28000, 42000),
-            "speed": random.randint(750, 950),
-            "heading": heading,
-            "departureCountry": "India",
-            "arrivalCountry": "India",
-        })
-    return swarm
+    if not _stable_swarm:
+        swarm = []
+        import math
+        # Pre-generate 500 stable flight profiles
+        for i in range(500):
+            origin = random.choice(hubs)
+            dest = random.choice(hubs)
+            while dest == origin: dest = random.choice(hubs)
+            
+            t = random.uniform(0.1, 0.9)
+            lat = origin[1] + t * (dest[1] - origin[1]) + random.uniform(-0.2, 0.2)
+            lon = origin[2] + t * (dest[2] - origin[2]) + random.uniform(-0.2, 0.2)
+            
+            # Calculate heading
+            d_lon = math.radians(dest[2] - origin[2])
+            lat1_rad = math.radians(origin[1])
+            lat2_rad = math.radians(dest[1])
+            y = math.sin(d_lon) * math.cos(lat2_rad)
+            x = math.cos(lat1_rad) * math.sin(lat2_rad) - math.sin(lat1_rad) * math.cos(lat2_rad) * math.cos(d_lon)
+            brng = math.atan2(y, x)
+            heading = int((math.degrees(brng) + 360) % 360)
+            
+            swarm.append({
+                "id": f"MEGA-SATURATION-{i}",
+                "flightNumber": f"{random.choice(['AI','6E','UK','SG', 'QP', 'I5'])}-{random.randint(100, 9999)}",
+                "airline": random.choice(airlines),
+                "origin": origin[0],
+                "destination": dest[0],
+                "status": "active",
+                "latitude": lat,
+                "longitude": lon,
+                "altitude": random.randint(28000, 42000),
+                "speed": random.randint(750, 950),
+                "heading": heading,
+                "departureCountry": "India",
+                "arrivalCountry": "India",
+            })
+        _stable_swarm = swarm
+    else:
+        # Move coordinates slightly on every refresh to simulate continuous flight
+        for f in _stable_swarm:
+            f["latitude"] += random.uniform(-0.005, 0.005)
+            f["longitude"] += random.uniform(-0.005, 0.005)
+
+    return [f.copy() for f in _stable_swarm[:count]]
 
 def get_all_flights() -> tuple[list[dict[str, Any]], dict[str, Any]]:
     now = time.time()

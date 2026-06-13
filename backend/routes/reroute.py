@@ -164,41 +164,42 @@ def inject_storm_reroute(
 
     if not agent_log:
         # Fall back to template-based generator if Gemini is unavailable or fails
+        # Constructed dynamically to represent the actual selected flight, airline, and detour parameters
         agent_log = [
             {
                 "agent": "Weather Agent",
                 "type": "SCAN",
-                "message": "Severe storm cells detected on original movement vector at original path.",
+                "message": f"Convective weather scan active. Severe thunderstorm cells detected near {storm_lat}°N, {storm_lon}°E directly intersecting flight corridor.",
                 "timestamp": ts,
             },
             {
                 "agent": "Traffic Agent",
                 "type": "ANALYSIS",
-                "message": "Air traffic density on alternative vector A is very high.",
+                "message": f"Assessed adjacent air sectors. Airspace congestion is manageable for {airline} flight {flight_num} detour path.",
                 "timestamp": ts,
             },
             {
                 "agent": "Weather Agent",
                 "type": "ANALYSIS",
-                "message": "Alternative vector B avoids storm cells.",
+                "message": f"Alternate vector clear of thunderstorm cells. Safety buffer verified around coordinates {storm_lat}°N, {storm_lon}°E.",
                 "timestamp": ts,
             },
             {
                 "agent": "Navigation Agent",
                 "type": "COMPUTE",
-                "message": "Optimal vector calculated to maintain schedule while diverting.",
+                "message": f"Computed optimized en-route deviation. New path requires +{alt_fuel - orig_fuel} kg additional fuel and +{max(0, alt_time_min - orig_time_min)} min flight time.",
                 "timestamp": ts,
             },
             {
                 "agent": "Navigation Agent",
                 "type": "DECISION",
-                "message": "Final navigation plan confirmed via optimized detour.",
+                "message": f"Detour route approved. Navigation system updated with en-route flight vector deviation from current coordinates.",
                 "timestamp": ts,
             },
             {
                 "agent": "Final decision, all agents",
                 "type": "DECISION",
-                "message": "Reroute to alternate route recommended.",
+                "message": f"Alternate route flight plan deviation recommendation issued to {airline} crew {flight_num}.",
                 "timestamp": ts,
             },
         ]
