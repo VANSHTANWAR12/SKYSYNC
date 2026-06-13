@@ -1,14 +1,4 @@
 
-
-function formatAirportCode(name) {
-  if (!name) return "???";
-  const match = name.match(/\(([^)]+)\)/);
-  if (match && match[1]) {
-    return match[1].trim().toUpperCase();
-  }
-  return name.trim().slice(0, 3).toUpperCase();
-}
-
 function FlightInfo({ flight, loading, error, flights = [], onSelectFlight }) {
   const details = flight
     ? [

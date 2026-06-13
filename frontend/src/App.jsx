@@ -1,17 +1,18 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import Dashboard from "./pages/dashboard.jsx";
+import AssistantPage from "./pages/AssistantPage.jsx";
 import LoginPage from "./components/LoginPage.jsx";
 import { fetchCurrentUser, getAuthToken, removeAuthToken } from "./services/auth";
 
 function App() {
   const [user, setUser] = useState(null);
-  const [initializing, setInitializing] = useState(true);
+  const [initializing, setInitializing] = useState(() => !!getAuthToken());
+  const [activePage, setActivePage] = useState("dashboard");
 
   useEffect(() => {
     const token = getAuthToken();
     if (!token) {
-      setInitializing(false);
       return;
     }
 
@@ -32,7 +33,28 @@ function App() {
     return <LoginPage onLogin={setUser} />;
   }
 
-  return <Dashboard user={user} onLogout={() => { removeAuthToken(); setUser(null); }} />;
+  const handleLogout = () => {
+    removeAuthToken();
+    setUser(null);
+  };
+
+  if (activePage === "assistant") {
+    return (
+      <AssistantPage
+        user={user}
+        onLogout={handleLogout}
+        onBack={() => setActivePage("dashboard")}
+      />
+    );
+  }
+
+  return (
+    <Dashboard
+      user={user}
+      onLogout={handleLogout}
+      onOpenAssistant={() => setActivePage("assistant")}
+    />
+  );
 }
 
 export default App;

@@ -150,8 +150,8 @@ def inject_storm_reroute(
 
     ts = _now_iso()
 
-    # Try calling the Gen AI Service
     from backend.services.llm_service import generate_agent_briefing
+
     agent_log = generate_agent_briefing(
         flight_num=flight_num,
         airline=airline,
@@ -159,11 +159,11 @@ def inject_storm_reroute(
         alt_fuel=alt_fuel,
         time_diff=alt_time_min - orig_time_min,
         storm_lat=storm_lat,
-        storm_lon=storm_lon
+        storm_lon=storm_lon,
     )
-    
+
     if not agent_log:
-        # Fall back to template-based generator if API keys are missing
+        # Fall back to template-based generator if Gemini is unavailable or fails
         agent_log = [
             {
                 "agent": "Weather Agent",

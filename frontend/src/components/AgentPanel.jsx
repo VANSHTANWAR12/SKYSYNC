@@ -16,16 +16,28 @@ function AgentPanel({ agentData = {} }) {
             <p>Syncing Swarm Intelligence...</p>
           </div>
         ) : weatherAgent || trafficAgent || navigationAgent ? (
-          <div className="agent-summary">
-            <div className="detail-item">
-              <span className="detail-item__label">Risk Summary</span>
-              <span className="detail-item__value">{weatherAgent?.riskScore ?? 0}/100</span>
+          <>
+            <div className="agent-summary">
+              <div className="detail-item">
+                <span className="detail-item__label">Risk Summary</span>
+                <span className="detail-item__value">{weatherAgent?.riskScore ?? 0}/100</span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-item__label">Threat Zones</span>
+                <span className="detail-item__value">{weatherAgent?.threatCount ?? 0}</span>
+              </div>
             </div>
-            <div className="detail-item">
-              <span className="detail-item__label">Threat Zones</span>
-              <span className="detail-item__value">{weatherAgent?.threatCount ?? 0}</span>
+            <div className="briefing-panel">
+              <div className="briefing-panel__header">
+                <h3>Pilot Operational Briefing</h3>
+              </div>
+              <ul className="briefing-list">
+                <li>{weatherAgent?.summary || weatherAgent?.reasoning || (weatherAgent?.threatCount ? "Weather hazards detected along track; expect deviation and fuel penalty." : "Weather stable; maintain current profile.")}</li>
+                <li>{trafficAgent?.recommendation || (trafficAgent?.congestionLevel === "HIGH" ? "High traffic density present; maintain separation and monitor vectoring." : "Traffic flow nominal; standard spacing remains acceptable.")}</li>
+                <li>{navigationAgent?.swarmIntelligence || navigationAgent?.state || "Navigation systems monitoring nominal route."}</li>
+              </ul>
             </div>
-          </div>
+          </>
         ) : null}
 
         <div className="agent-list">
@@ -50,6 +62,12 @@ function AgentPanel({ agentData = {} }) {
                 <span>Threat Count: {weatherAgent.threatCount ?? 0}</span>
                 <span>State: {weatherAgent.state || "Monitoring"}</span>
               </div>
+              { (weatherAgent.summary || weatherAgent.reasoning) ? (
+                <div className="agent-card__meta agent-card__meta--reasoning">
+                  <strong>Pilot Briefing:</strong>
+                  <div>{weatherAgent.summary || weatherAgent.reasoning}</div>
+                </div>
+              ) : null}
             </article>
           ) : null}
 
@@ -74,6 +92,12 @@ function AgentPanel({ agentData = {} }) {
                 <span>Aircraft Count: {trafficAgent.aircraftCount ?? 0}</span>
                 <span>Region: {trafficAgent.region || "India Airspace"}</span>
               </div>
+              {trafficAgent.recommendation ? (
+                <div className="agent-card__meta agent-card__meta--reasoning">
+                  <strong>Pilot Briefing:</strong>
+                  <div>{trafficAgent.recommendation}</div>
+                </div>
+              ) : null}
             </article>
           ) : null}
 
@@ -98,6 +122,12 @@ function AgentPanel({ agentData = {} }) {
                 <span>Active Decisions: {navigationAgent.activeDecisions ?? 0}</span>
                 <span>Swarm: {navigationAgent.swarmIntelligence || "Enabled"}</span>
               </div>
+              {navigationAgent.swarmIntelligence ? (
+                <div className="agent-card__meta agent-card__meta--reasoning">
+                  <strong>Pilot Briefing:</strong>
+                  <div>{navigationAgent.swarmIntelligence}</div>
+                </div>
+              ) : null}
             </article>
           ) : null}
 

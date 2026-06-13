@@ -5,15 +5,6 @@
  */
 import { useState } from "react";
 
-/** Map agent log entry type → colour token */
-const LOG_TYPE_COLOR = {
-  SCAN:     "#60a5fa",   // blue
-  ANALYSIS: "#f59e0b",  // amber
-  COMPUTE:  "#a78bfa",  // purple
-  DECISION: "#34d399",  // green
-  METRICS:  "#22d3ee",  // cyan
-  INFO:     "#94a3b8",  // muted
-};
 
 /** Map severity → colour */
 const AGENT_COLOR = {
@@ -175,6 +166,13 @@ export default function RerouteCard({
           better="lower"
         />
       </div>
+
+      {metrics.netSavings !== undefined && (
+        <div className="reroute-card__roi-banner">
+          <div className="roi-label">Net Operational ROI</div>
+          <div className="roi-value text-green">${metrics.netSavings.toLocaleString()}</div>
+        </div>
+      )}
 
       {/* ── Toggle original route ── */}
       <label className="reroute-card__toggle">

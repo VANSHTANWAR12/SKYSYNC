@@ -23,7 +23,6 @@ app.add_middleware(
 )
 
 app.include_router(flights_router, prefix="/api")
-app.include_router(weather_router, prefix="/api")
 app.include_router(agents_router, prefix="/api")
 app.include_router(health_router, prefix="/api")
 app.include_router(reroute_router, prefix="/api")

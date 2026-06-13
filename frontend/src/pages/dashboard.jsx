@@ -4,11 +4,12 @@ import FlightInfo from "../components/FlightInfo";
 import FlightMap from "../components/FlightMap";
 import AgentPanel from "../components/AgentPanel";
 import EventFeed from "../components/EventFeed";
+import FleetAnalytics from "../components/FleetAnalytics";
 import { fetchLiveFlights } from "../services/flights";
 import { fetchWeatherThreats } from "../services/weather";
 import { fetchAgentStatus } from "../services/agents";
 import { useReroute } from "../hooks/useReroute";
-import { resolveAirportCoords } from "../utils/airportCoords";
+import { computeFlightMetrics } from "../utils/metrics";
 
 function formatUtcTime(date) {
   return new Intl.DateTimeFormat("en-GB", {
@@ -62,7 +63,7 @@ function buildEvents(flightCount, weatherSummary, agentData, apiStatus) {
   return events;
 }
 
-function Dashboard({ user, onLogout }) {
+function Dashboard({ user, onLogout, onOpenAssistant }) {
   const [utcTime, setUtcTime] = useState(() => formatUtcTime(new Date()));
   const [flights, setFlights] = useState([]);
   const [selectedFlightId, setSelectedFlightId] = useState(null);
@@ -80,6 +81,61 @@ function Dashboard({ user, onLogout }) {
   const [agentError, setAgentError] = useState("");
   const [agentLoading, setAgentLoading] = useState(true);
 
+  // ── B2B Fleet Analytics & Simulation parameters ───────────────────────────
+  const [viewMode, setViewMode] = useState("tactical");
+  const [simParams, setSimParams] = useState({
+    fuelPrice: 1.10,
+    carbonTax: 85,
+    delayCost: 75,
+    holdingTimeMin: 25,
+    holdingFuelRate: 25
+  });
+
+  const [approvedReroutes, setApprovedReroutes] = useState(() => [
+    {
+      flightId: "MOCK-PREV-1",
+      flightNumber: "AI-204",
+      airline: "Air India",
+      origin: "DELHI (DEL)",
+      destination: "BENGALURU (BLR)",
+      originalRoute: {
+        totalDistanceKm: 1740,
+        estimatedFuelKg: 6090,
+        estimatedTimeMin: 123
+      },
+      alternateRoute: {
+        totalDistanceKm: 1890,
+        estimatedFuelKg: 6615,
+        estimatedTimeMin: 133
+      },
+      metrics: {
+        safetyScore: 94
+      },
+      approvedAt: new Date(Date.now() - 25 * 60 * 1000).toISOString()
+    },
+    {
+      flightId: "MOCK-PREV-2",
+      flightNumber: "6E-551",
+      airline: "IndiGo",
+      origin: "KOLKATA (CCU)",
+      destination: "MUMBAI (BOM)",
+      originalRoute: {
+        totalDistanceKm: 1660,
+        estimatedFuelKg: 5810,
+        estimatedTimeMin: 118
+      },
+      alternateRoute: {
+        totalDistanceKm: 1780,
+        estimatedFuelKg: 6230,
+        estimatedTimeMin: 126
+      },
+      metrics: {
+        safetyScore: 91
+      },
+      approvedAt: new Date(Date.now() - 50 * 60 * 1000).toISOString()
+    }
+  ]);
+
   // ── Reroute hook ──────────────────────────────────────────────────────────
   const {
     rerouteData,
@@ -91,6 +147,42 @@ function Dashboard({ user, onLogout }) {
     approveReroute,
     rejectReroute,
   } = useReroute();
+
+  const adjustedRerouteData = useMemo(() => {
+    if (!rerouteData) return null;
+    const m = computeFlightMetrics(rerouteData.originalRoute, rerouteData.alternateRoute, simParams);
+    return {
+      ...rerouteData,
+      metrics: {
+        ...rerouteData.metrics,
+        originalFuelKg: m.origTotalFuel,
+        alternateFuelKg: m.altTotalFuel,
+        originalTimeMin: m.origTotalTime,
+        alternateTimeMin: m.altTotalTime,
+        fuelSavingsPercent: Math.round((m.netFuelSaved / m.origTotalFuel) * 1000) / 10,
+        netSavings: m.netSavings
+      }
+    };
+  }, [rerouteData, simParams]);
+
+  const handleApproveReroute = useCallback(() => {
+    approveReroute();
+    if (rerouteData) {
+      setApprovedReroutes(prev => {
+        if (prev.some(r => r.flightId === rerouteData.flightId)) return prev;
+        const flightObj = flights.find(f => f.id === selectedFlightId);
+        return [
+          ...prev,
+          {
+            ...rerouteData,
+            origin: flightObj?.origin || rerouteData.origin || "Unknown",
+            destination: flightObj?.destination || rerouteData.destination || "Unknown",
+            approvedAt: new Date().toISOString()
+          }
+        ];
+      });
+    }
+  }, [approveReroute, rerouteData, flights, selectedFlightId]);
 
   /**
    * Build a flight context object for the reroute hook —
@@ -267,6 +359,7 @@ function Dashboard({ user, onLogout }) {
       weatherAgent: agentData.weatherAgent,
       trafficAgent: agentData.trafficAgent,
       navigationAgent: agentData.navigationAgent,
+      llm: agentData.llm,
       weatherLoading,
       flightLoading,
       agentLoading,
@@ -294,48 +387,78 @@ function Dashboard({ user, onLogout }) {
         onLogout={onLogout}
       />
 
-      <main 
-        className="dashboard-layout" 
-        style={{ 
-            gridTemplateColumns: `${leftWidth}px 8px 1fr 8px ${rightWidth}px`,
-            userSelect: (isResizingLeft || isResizingRight) ? 'none' : 'auto'
-        }}
-      >
-        <FlightInfo
-          flight={selectedFlight}
-          loading={flightLoading}
-          error={flightError}
+      <div className="dashboard-actions">
+        <div className="view-mode-toggle">
+          <button 
+            className={`toggle-btn ${viewMode === 'tactical' ? 'active' : ''}`}
+            onClick={() => setViewMode('tactical')}
+          >
+            Tactical Flight Deck
+          </button>
+          <button 
+            className={`toggle-btn ${viewMode === 'executive' ? 'active' : ''}`}
+            onClick={() => setViewMode('executive')}
+          >
+            Fleet Business Analytics
+          </button>
+        </div>
+
+        <button className="open-chat-button" onClick={onOpenAssistant}>
+          Open Pilot Assistant
+        </button>
+      </div>
+
+      {viewMode === "executive" ? (
+        <FleetAnalytics
+          approvedReroutes={approvedReroutes}
+          simParams={simParams}
+          setSimParams={setSimParams}
           flights={flights}
-          onSelectFlight={handleSelectFlight}
-          weatherThreats={agentData.weatherThreats || []}
-          navigationDecisions={agentData.navigationDecisions || []}
         />
-        
-        <div className={`resizer ${isResizingLeft ? 'resizer--active' : ''}`} onMouseDown={handleMouseDownLeft} />
+      ) : (
+        <main 
+          className="dashboard-layout" 
+          style={{ 
+              gridTemplateColumns: `${leftWidth}px 8px 1fr 8px ${rightWidth}px`,
+              userSelect: (isResizingLeft || isResizingRight) ? 'none' : 'auto'
+          }}
+        >
+          <FlightInfo
+            flight={selectedFlight}
+            loading={flightLoading}
+            error={flightError}
+            flights={flights}
+            onSelectFlight={handleSelectFlight}
+            weatherThreats={agentData.weatherThreats || []}
+            navigationDecisions={agentData.navigationDecisions || []}
+          />
+          
+          <div className={`resizer ${isResizingLeft ? 'resizer--active' : ''}`} onMouseDown={handleMouseDownLeft} />
 
-        <FlightMap
-          flights={flights}
-          selectedFlightId={selectedFlightId}
-          selectedFlight={selectedFlight}
-          onSelectFlight={handleSelectFlight}
-          weatherThreats={weatherThreats}
-          trafficZones={agentData.trafficZones || []}
-          weatherLoading={weatherLoading}
-          weatherError={weatherError}
-          rerouteData={rerouteData}
-          rerouteStatus={rerouteStatus}
-          agentLog={agentLog}
-          showOriginal={showOriginal}
-          onToggleOriginal={setShowOriginal}
-          onInjectStorm={handleInjectStorm}
-          onApproveReroute={approveReroute}
-          onRejectReroute={rejectReroute}
-        />
+          <FlightMap
+            flights={flights}
+            selectedFlightId={selectedFlightId}
+            selectedFlight={selectedFlight}
+            onSelectFlight={handleSelectFlight}
+            weatherThreats={weatherThreats}
+            trafficZones={agentData.trafficZones || []}
+            weatherLoading={weatherLoading}
+            weatherError={weatherError}
+            rerouteData={adjustedRerouteData}
+            rerouteStatus={rerouteStatus}
+            agentLog={agentLog}
+            showOriginal={showOriginal}
+            onToggleOriginal={setShowOriginal}
+            onInjectStorm={handleInjectStorm}
+            onApproveReroute={handleApproveReroute}
+            onRejectReroute={rejectReroute}
+          />
 
-        <div className={`resizer ${isResizingRight ? 'resizer--active' : ''}`} onMouseDown={handleMouseDownRight} />
+          <div className={`resizer ${isResizingRight ? 'resizer--active' : ''}`} onMouseDown={handleMouseDownRight} />
 
-        <AgentPanel agentData={agents} />
-      </main>
+          <AgentPanel agentData={agents} />
+        </main>
+      )}
 
       <EventFeed events={events} />
     </div>
